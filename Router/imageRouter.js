@@ -2,6 +2,8 @@ var express = require("express");
 var multer = require("multer");
 var router = express.Router();
 
+const { get } = require("lodash");
+
 var imageApi = require("../Api/imageApi");
 const { authorize } = require("../Middleware/middleware");
 
@@ -17,21 +19,27 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage });
 
 router.post(
-    "/imageupload",
+    "/imageUpload",
     authorize,
     upload.single("imageupload"),
     async (req, res) => {
         try {
+            let { email, cat, userId, userToken, filter } = req.body;
+            let { filename, path } = req.file;
             const imageData = {
-                email: req.body.email,
-                cat: req.body.cat,
-                imageupload: req.file.filename,
-                path: req.file.path,
-                userId: req.body.userId,
-                userToken: req.body.userToken
+                email,
+                cat,
+                imageupload: filename,
+                path,
+                userId,
+                userToken
             };
-            //console.log("Userdata>>>", imageData);
-            var result = await imageApi.ImageUpload(imageData);
+            var result = await imageApi.imageUpload(imageData);
+            result = await imageApi.findData(
+                filter ? JSON.parse(filter) : {},
+                {},
+                { skip: 0, limit: 0, sort: { uploadTime: -1 } }
+            );
             res.send(result);
         } catch (err) {
             res.send(err);
@@ -39,41 +47,14 @@ router.post(
     }
 );
 
-router.post(
-    "/publicImageUpload",
-    authorize,
-    upload.single("imageupload"),
-    async (req, res) => {
-        try {
-            const imageData = {
-                email: req.body.email,
-                cat: req.body.cat,
-                imageupload: req.file.filename,
-                path: req.file.path,
-                userId: req.body.userId,
-                userToken: req.body.userToken
-            };
-            //console.log("Userdata>>>", imageData);
-            var result = await imageApi.PublicImageUpload(imageData);
-            res.send(result);
-        } catch (err) {
-            res.send(err);
-        }
-    }
-);
-
-router.post("/getCategories", authorize, async function(req, res) {
+router.get("/getPostData", authorize, async function(req, res) {
     try {
-        var result = await imageApi.Categories(req.body);
-        res.send(result);
-    } catch (err) {
-        res.send(err);
-    }
-});
-
-router.post("/getAllPost", authorize, async function(req, res) {
-    try {
-        var result = await imageApi.AllPosts(req.body);
+        let params = JSON.parse(req.query.params);
+        console.log("params-----", params);
+        const fields = get(params, "fields", {});
+        const filter = get(params, "filter", {});
+        const option = get(params, "option", { skip: 1, limit: 1, sort: {} });
+        var result = await imageApi.findData(filter, fields, option);
         res.send(result);
     } catch (err) {
         res.send(err);
@@ -87,27 +68,38 @@ router.post("/uploadComment", authorize, async function(req, res) {
             id: req.body.Category[0]._id
         };
         var result = await imageApi.Comment(commentData);
+        let query = {
+            filter: { _id: commentData.id },
+            fields: { comment: 1 },
+            option: { skip: 0, limit: 0, sort: { uploadTime: -1 } }
+        };
+        let { filter, fields, option } = query;
+        result = await imageApi.findData(filter, fields, option);
         res.send(result);
     } catch (err) {
         res.send(err);
     }
 });
 
-router.post("/imageData", authorize, async function(req, res) {
-    try {
-        var result = await imageApi.ImageData(req.body);
-        res.send(result);
-    } catch (err) {
-        res.send(err);
-    }
-});
-
-router.post("/mostCommented", authorize, async function(req, res) {
+router.get("/mostCommented", authorize, async function(req, res) {
     try {
         var result = await imageApi.MostCommented(req.body);
         res.send(result);
     } catch (err) {
-        console.log("error", err);
+        res.send(err);
+    }
+});
+
+router.post("/Likes", authorize, async function(req, res) {
+    try {
+        var result = await imageApi.imageLikes(req.body);
+        result = await imageApi.findData(
+            {},
+            {},
+            { skip: 0, limit: 0, sort: { uploadTime: -1 } }
+        );
+        res.send(result);
+    } catch (err) {
         res.send(err);
     }
 });

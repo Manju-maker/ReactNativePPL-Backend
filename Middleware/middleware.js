@@ -8,7 +8,7 @@ const httpStatus = require("http-status");
 
 let generateToken = data => {
     const payload = { user: data.email };
-    const option = { expiresIn: "60m" };
+    const option = { expiresIn: "2d" };
     const secret = development.secret;
     const token = jwt.sign(payload, secret, option);
     return { token, payload, option };
@@ -17,7 +17,7 @@ let generateToken = data => {
 let authorize = (req, res, next) => {
     //console.log("Authorized called");
     let token = req.headers["authorization"];
-    //console.log("Token>>>", token);
+
     if (token) {
         if (token.startsWith("Bearer")) {
             token = token.slice(7, token.length);
@@ -35,10 +35,9 @@ let authorize = (req, res, next) => {
             }
         });
     } else {
-        return res.json({
-            success: false,
-            message: "User not Authorized"
-        });
+        return res
+            .status(httpStatus.NETWORK_AUTHENTICATION_REQUIRED)
+            .json({ error: "Token required" });
     }
 };
 module.exports = {

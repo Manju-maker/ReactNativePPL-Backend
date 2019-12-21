@@ -6,6 +6,7 @@ var detail = mongoose.Schema({
     uploadTime: { type: Date, default: Date.now },
     userId: { type: String },
     cat: { type: String },
-    comment: { type: Array }
+    comment: { type: Array },
+    likes: []
 });
 module.exports = mongoose.model("imageDetails", detail);

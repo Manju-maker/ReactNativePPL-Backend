@@ -1,77 +1,32 @@
 var imageApi = require("../Schema/imageSchema");
 
 module.exports = {
-    ImageUpload: function(data) {
+    imageUpload: function(data) {
         return new Promise((resolve, reject) => {
             imageApi.create(data, function(err, result) {
                 if (result) {
-                    imageApi
-                        .find({ userId: data["userId"] })
-                        .sort({ uploadTime: -1 })
-                        .exec(function(err, result1) {
-                            if (result1) {
-                                resolve(result1);
-                            } else {
-                                reject(err);
-                            }
-                        });
+                    resolve(result);
                 }
                 if (err) {
-                    console.log(err);
                     reject(err);
                 }
             });
         });
     },
 
-    PublicImageUpload: function(data) {
+    Comment: function(data) {
         return new Promise((resolve, reject) => {
-            imageApi.create(data, function(err, result) {
-                if (result) {
-                    imageApi
-                        .find({})
-                        .sort({ uploadTime: -1 })
-                        .exec(function(err, result1) {
-                            if (result1) {
-                                resolve(result1);
-                            } else {
-                                reject(err);
-                            }
-                        });
-                } else {
-                    reject(err);
+            imageApi.updateOne(
+                { _id: data.id },
+                { $push: { comment: data.comment } },
+                function(err, result) {
+                    if (result) {
+                        resolve(result);
+                    } else {
+                        reject(err);
+                    }
                 }
-            });
-        });
-    },
-
-    Categories: function(data) {
-        return new Promise((resolve, reject) => {
-            imageApi
-                .find({ userId: data.userID })
-                .sort({ uploadTime: -1 })
-                .exec(function(err, result) {
-                    if (result) {
-                        resolve(result);
-                    } else {
-                        reject(err);
-                    }
-                });
-        });
-    },
-
-    AllPosts: function(data) {
-        return new Promise((resolve, reject) => {
-            imageApi
-                .find({})
-                .sort({ uploadTime: -1 })
-                .exec(function(err, result) {
-                    if (result) {
-                        resolve(result);
-                    } else {
-                        reject(err);
-                    }
-                });
+            );
         });
     },
 
@@ -90,52 +45,43 @@ module.exports = {
                 ],
                 function(err, result) {
                     if (result) {
-                        console.log("result of latest---", result);
                         resolve(result);
                     } else {
-                        console.log(err);
                         reject(err);
                     }
                 }
             );
         });
     },
-    Comment: function(data) {
-        console.log("Data >>>>>>>", data);
+
+    imageLikes: function(data) {
         return new Promise((resolve, reject) => {
-            imageApi.updateOne(
-                { _id: data.id },
-                { $push: { comment: data.comment } },
-                function(err, result) {
-                    if (result) {
-                        imageApi.findOne(
-                            { _id: data.id },
-                            { comment: 1 },
-                            function(err, result1) {
-                                if (result1) {
-                                    resolve(result1);
-                                } else {
-                                    reject(err);
-                                }
-                            }
-                        );
-                    } else {
-                        reject(err);
-                    }
-                }
-            );
+            imageApi
+                .updateOne(
+                    { _id: data.imageId },
+                    { $push: { likes: data.userId } }
+                )
+                .then(response => resolve(response))
+                .catch(error => reject(error));
         });
     },
-    ImageData: function(data) {
+
+    findData: function(filter, fields, option) {
+        console.log("filter---", filter);
         return new Promise((resolve, reject) => {
-            imageApi.find({ _id: data.id }, function(err, result) {
-                if (result) {
+            imageApi
+                .find(filter, fields)
+                .sort(option.sort)
+                .skip(option.skip)
+                .limit(option.limit)
+                .then(result => {
+                    console.log("response-----", result);
                     resolve(result);
-                } else {
-                    console.log(err);
+                })
+                .catch(err => {
+                    console.log("err----", err);
                     reject(err);
-                }
-            });
+                });
         });
     }
 };
