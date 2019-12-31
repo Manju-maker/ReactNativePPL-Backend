@@ -50,7 +50,6 @@ router.post(
 router.get("/getPostData", authorize, async function(req, res) {
     try {
         let params = JSON.parse(req.query.params);
-        console.log("params-----", params);
         const fields = get(params, "fields", {});
         const filter = get(params, "filter", {});
         const option = get(params, "option", { skip: 1, limit: 1, sort: {} });
@@ -59,6 +58,23 @@ router.get("/getPostData", authorize, async function(req, res) {
     } catch (err) {
         res.send(err);
     }
+});
+
+router.get("/count", authorize, function(req, res) {
+    let params;
+    if (req.query.params && isString(req.query.params)) {
+        params = JSON.parse(req.query.params);
+    }
+    const filter = get(params, "filter", {});
+    imageApi
+        .countPost(filter)
+        .then(response => {
+            console.log("count--", response);
+            res.send({ count: response });
+        })
+        .catch(err => {
+            console.log(err);
+        });
 });
 
 router.post("/uploadComment", authorize, async function(req, res) {
@@ -75,15 +91,6 @@ router.post("/uploadComment", authorize, async function(req, res) {
         };
         let { filter, fields, option } = query;
         result = await imageApi.findData(filter, fields, option);
-        res.send(result);
-    } catch (err) {
-        res.send(err);
-    }
-});
-
-router.get("/mostCommented", authorize, async function(req, res) {
-    try {
-        var result = await imageApi.MostCommented(req.body);
         res.send(result);
     } catch (err) {
         res.send(err);

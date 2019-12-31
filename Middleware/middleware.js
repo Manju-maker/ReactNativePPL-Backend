@@ -11,11 +11,10 @@ let generateToken = data => {
     const option = { expiresIn: "2d" };
     const secret = development.secret;
     const token = jwt.sign(payload, secret, option);
-    return { token, payload, option };
+    return { token, payload };
 };
 
 let authorize = (req, res, next) => {
-    //console.log("Authorized called");
     let token = req.headers["authorization"];
 
     if (token) {
@@ -25,12 +24,7 @@ let authorize = (req, res, next) => {
         jwt.verify(token, development.secret, (err, userData) => {
             if (err) {
                 return res.status(httpStatus.UNAUTHORIZED).json(err);
-                // return res.json({
-                //     success: false,
-                //     message: "Token expired"
-                // });
             } else {
-                //console.log("Userdata>>>>", userData);
                 next();
             }
         });

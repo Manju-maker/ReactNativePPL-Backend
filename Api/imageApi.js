@@ -30,30 +30,6 @@ module.exports = {
         });
     },
 
-    MostCommented: function(data) {
-        return new Promise((resolve, reject) => {
-            imageApi.aggregate(
-                [
-                    {
-                        $addFields: {
-                            comment_count: {
-                                $size: { $ifNull: ["$comment", []] }
-                            }
-                        }
-                    },
-                    { $sort: { comment_count: -1 } }
-                ],
-                function(err, result) {
-                    if (result) {
-                        resolve(result);
-                    } else {
-                        reject(err);
-                    }
-                }
-            );
-        });
-    },
-
     imageLikes: function(data) {
         return new Promise((resolve, reject) => {
             imageApi
@@ -67,7 +43,6 @@ module.exports = {
     },
 
     findData: function(filter, fields, option) {
-        console.log("filter---", filter);
         return new Promise((resolve, reject) => {
             imageApi
                 .find(filter, fields)
@@ -75,11 +50,25 @@ module.exports = {
                 .skip(option.skip)
                 .limit(option.limit)
                 .then(result => {
-                    console.log("response-----", result);
                     resolve(result);
                 })
                 .catch(err => {
-                    console.log("err----", err);
+                    reject(err);
+                });
+        });
+    },
+
+    countPost: function(filter) {
+        return new Promise((resolve, result) => {
+            imageApi
+                .find(filter)
+                .count()
+                .then(result => {
+                    console.log("ResultCount>>>", result);
+                    resolve(result);
+                })
+                .catch(err => {
+                    console.log("Err---", err);
                     reject(err);
                 });
         });
