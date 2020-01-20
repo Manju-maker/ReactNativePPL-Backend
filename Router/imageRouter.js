@@ -18,33 +18,38 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post("/imageUpload", upload.single("imageupload"), async (req, res) => {
-    console.log("body", req.body);
-    console.log("file", req.file);
-    try {
-        let { email, cat, userId, userToken, filter } = req.body;
-        let { filename, path } = req.file;
-        const imageData = {
-            email,
-            cat,
-            imageupload: filename,
-            path,
-            userId,
-            userToken
-        };
-        var result = await imageApi.imageUpload(imageData);
-        result = await imageApi.findData(
-            filter ? JSON.parse(filter) : {},
-            {},
-            { skip: 0, limit: 0, sort: { uploadTime: -1 } }
-        );
-        res.send(result);
-    } catch (err) {
-        res.send(err);
+router.post(
+    "/imageUpload",
+    authorize,
+    upload.single("imageupload"),
+    async (req, res) => {
+        console.log("body", req.body);
+        console.log("file", req.file);
+        try {
+            let { email, cat, userId, userToken, filter } = req.body;
+            let { filename, path } = req.file;
+            const imageData = {
+                email,
+                cat,
+                imageupload: filename,
+                path,
+                userId,
+                userToken
+            };
+            var result = await imageApi.imageUpload(imageData);
+            result = await imageApi.findData(
+                filter ? JSON.parse(filter) : {},
+                {},
+                { skip: 0, limit: 0, sort: { uploadTime: -1 } }
+            );
+            res.send(result);
+        } catch (err) {
+            res.send(err);
+        }
     }
-});
+);
 
-router.get("/getPostData", async function(req, res) {
+router.get("/getPostData", authorize, async function(req, res) {
     try {
         let params = JSON.parse(req.query.params);
         const fields = get(params, "fields", {});
@@ -74,7 +79,7 @@ router.get("/count", authorize, function(req, res) {
         });
 });
 
-router.post("/uploadComment", async function(req, res) {
+router.post("/uploadComment", authorize, async function(req, res) {
     try {
         console.log("Req.body--", req.body);
         const commentData = {
@@ -96,7 +101,7 @@ router.post("/uploadComment", async function(req, res) {
     }
 });
 
-router.post("/Likes", async function(req, res) {
+router.post("/Likes", authorize, async function(req, res) {
     try {
         var result = await imageApi.imageLikes(req.body);
         result = await imageApi.findData(

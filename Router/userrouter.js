@@ -1,13 +1,18 @@
+//import { express } from "express";
 var express = require("express");
 var router = express.Router();
 var userapi = require("../Api/userapi");
 const { generateToken } = require("../Middleware/middleware.js");
 const httpStatus = require("http-status");
 const { sendMail } = require("../sendGrid/sendMails");
+const { authorize } = require("../Middleware/middleware");
+const { get } = require("lodash");
 
 router.post("/registerUser", async function(req, res) {
     try {
+        console.log("Body===", req.body);
         var result = await userapi.Adduser(req.body);
+        console.log("Result------>>>", result);
         if (result) {
             sendMail(result.email, result._id);
         }
@@ -65,7 +70,7 @@ router.post("/login", async function(req, res) {
         let token = generateToken(req.body);
         let query = {
             filter: { email: req.body.email, password: req.body.password },
-            fields: { _id: 1, verify: 1, firstname: 1 },
+            fields: { _id: 1, verify: 1, firstname: 1, lastname: 1 },
             option: { skip: 0, limit: 0 }
         };
         let { filter, fields, option } = query;
@@ -79,6 +84,36 @@ router.post("/login", async function(req, res) {
         }
     } catch (err) {
         res.send(err);
+    }
+});
+router.post("/updateUserDetails", authorize, async function(req, res) {
+    try {
+        let query = {
+            filter: { _id: req.body._id },
+            fields: {
+                firstname: req.body.firstname,
+                lastname: req.body.lastname
+            },
+            option: { skip: 0, limit: 0, sort: {} }
+        };
+        let { filter, fields, option } = query;
+        var result = await userapi.Update(filter, fields, option);
+        result = await userapi.findData(filter, {}, option);
+        res.send(result)
+    } catch (err) {
+        console.log("Err--", err);
+    }
+});
+router.get("/getUserDetails", authorize, async function(req, res) {
+    try {
+        let params = JSON.parse(req.query.params);
+        const filter = get(params, "filter", {});
+        const fields = get(params, "fields", {});
+        const option = get(params, "option", { sort: 0, skip: 0, sort: {} });
+        var result = await userapi.findData(filter, fields, option);
+        res.send(result);
+    } catch (err) {
+        console.log(err);
     }
 });
 

@@ -61,5 +61,18 @@ module.exports = {
                     reject(err);
                 });
         });
+    },
+
+    Update: function(filter, fields) {
+        return new Promise((resolve, reject) => {
+            userapi
+                .updateOne(filter, { $set: fields })
+                .then(result => {
+                    resolve(result);
+                })
+                .catch(err => {
+                    reject(err);
+                });
+        });
     }
 };

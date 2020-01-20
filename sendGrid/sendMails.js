@@ -7,9 +7,7 @@ let sendMail = (email, id) => {
         from: "bhattmanju46@gmail.com",
         subject: "Sending with Twilio SendGrid is Fun",
         text: "Registered Successfully",
-        html:
-            "You're on your way!<br>Let's confirm your email addressBy clicking on the following link, you are confirming your email address<br> http://localhost:8081/verify/" +
-            id
+        html: `You're on your way!<br>Let's confirm your email addressBy clicking on the following link, you are confirming your email address<br>${development.serverIP}/verify/${id}`
     };
     SGmail.send(msg)
         .then(response => console.log("response of email---", response))
