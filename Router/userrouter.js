@@ -1,4 +1,3 @@
-//import { express } from "express";
 var express = require("express");
 var router = express.Router();
 var userapi = require("../Api/userapi");
@@ -10,9 +9,7 @@ const { get } = require("lodash");
 
 router.post("/registerUser", async function(req, res) {
     try {
-        console.log("Body===", req.body);
         var result = await userapi.Adduser(req.body);
-        console.log("Result------>>>", result);
         if (result) {
             sendMail(result.email, result._id);
         }
@@ -99,7 +96,7 @@ router.post("/updateUserDetails", authorize, async function(req, res) {
         let { filter, fields, option } = query;
         var result = await userapi.Update(filter, fields, option);
         result = await userapi.findData(filter, {}, option);
-        res.send(result)
+        res.send(result);
     } catch (err) {
         console.log("Err--", err);
     }
